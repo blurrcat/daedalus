@@ -1,0 +1,4 @@
+daedalus:
+  build: .
+  volumes:
+    - ".:/usr/src/app"
