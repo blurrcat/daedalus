@@ -11,7 +11,6 @@ case "$1" in
     "daedalus.web.main:create_app()"
         ;;
     worker)
-        echo $RQ_REDIS_URL
         rq worker -c daedalus.config
         ;;
     *)
