@@ -5,10 +5,10 @@ web:
   links:
     - redis
   environment:
-    DAEDALUS_REDIS_DSN: redis://redis
+    DAEDALUS_REDIS_URL: redis://redis
   ports:
     - "8000:8000"
-  command: python daedalus/app.py
+  command: python daedalus/web/main.py
 worker:
   extends:
     file: daedalus.yml
@@ -16,7 +16,7 @@ worker:
   links:
     - redis
   environment:
-    DAEDALUS_REDIS_DSN: redis://redis
+    DAEDALUS_REDIS_URL: redis://redis
   command: worker
 redis:
   image: redis

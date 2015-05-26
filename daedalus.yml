@@ -2,3 +2,9 @@ daedalus:
   build: .
   volumes:
     - ".:/usr/src/app"
+    - "~/.boot2docker/certs/boot2docker-vm:/usr/certs"
+  environment:
+    DOCKER_HOST: "unix:///var/run/docker.sock"
+    DOCKER_CERT_PATH: "/usr/certs"
+    DOCKER_TLS_VERIFY: 1
+    DAEDALUS_DOCKER_ASSERT_HOSTNAME: False
