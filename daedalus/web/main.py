@@ -1,32 +1,17 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-import ast
-import os
 from flask import Flask
 from redis import StrictRedis
 from rq import Queue
+from daedalus.utils import get_config
 
 
 def configure_app(app):
-    app.config.from_object('daedalus.config')
-    # production config via env vars
-    prefix = 'DAEDALUS_'
-    for k, v in os.environ.items():
-        if k.startswith(prefix):
-            k = k[len(prefix):]
-            try:
-                v = ast.literal_eval(v)
-            except (ValueError, SyntaxError):
-                pass
-            app.config[k] = v
-            m = 'override config %s via environment' % k
-            if app.config.get('DEBUG', False):
-                m = '%s: %s' % (m, v)
-            print(m)
+    app.config = get_config()
 
 
 def configure_extensions(app):
-    redis = StrictRedis.from_url(app.config['REDIS_DSN'])
+    redis = StrictRedis.from_url(app.config['REDIS_URL'])
     app.extensions['redis'] = redis
     queue = Queue(connection=redis)
     app.extensions['queue'] = queue
