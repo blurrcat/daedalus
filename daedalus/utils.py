@@ -5,6 +5,7 @@ import os
 import tempfile
 import time
 import shutil
+from daedalus import config
 
 
 class TempDirectory(object):
@@ -12,6 +13,7 @@ class TempDirectory(object):
     Create a temporary directory.
     """
     DIR = tempfile.gettempdir()
+
     def __init__(self, name='', chdir=True, clean=True):
         self.d = os.path.join(self.DIR, name, str(time.time()))
         self.chdir = chdir
@@ -38,9 +40,10 @@ def config_from_env(prefix, show=False):
         if k.startswith(prefix):
             k = k[offset:]
             try:
-                result[k] = ast.literal_eval(v)
+                v = ast.literal_eval(v)
             except (ValueError, SyntaxError):
                 pass
+            result[k] = v
     if show:
         print('override from env: ')
         for k, v in result.items():
@@ -49,14 +52,14 @@ def config_from_env(prefix, show=False):
 
 
 def config_from_obj(config_obj):
-    config = {}
+    conf = {}
     for k in dir(config_obj):
         if k.isupper():
-            config[k] = getattr(config_obj, k)
-    return config
+            conf[k] = getattr(config_obj, k)
+    return conf
 
 
-_config = config_from_obj('daedalus.config')
+_config = config_from_obj(config)
 # production config via env vars
 _config.update(config_from_env('DAEDALUS_'))
 

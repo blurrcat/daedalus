@@ -6,5 +6,7 @@ ENV WEB_CONCURRENCY=1 \
     DAEDALUS_DEBUG=False
 EXPOSE 8000
 
+RUN pip install -e .
+
 ENTRYPOINT ["./entry.sh"]
 CMD ["web"]
