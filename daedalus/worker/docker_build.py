@@ -13,12 +13,13 @@ from daedalus.utils import TempDirectory
 
 class Docker(object):
 
-    def __init__(self, bid, registry, username, password, nocache,
-                 assert_hostname=None, log_handler=None):
+    def __init__(self, bid, registry=None, username=None, password=None,
+                 nocache=False, assert_hostname=None, log_handler=None):
         """
         :param str bid: an unique identifier of the build
         """
-        self.re_repo = re.compile('(\w+).git')
+        self.re_repo = re.compile(r'.*/(\w+).git')
+        self.re_image_id = re.compile(r'Successfully built (\w+)')
         self.logger = logging.getLogger('daedalus.docker')
         self.nocache = nocache
         if log_handler:
@@ -26,20 +27,26 @@ class Docker(object):
         self.client = Client(**kwargs_from_env(
             assert_hostname=assert_hostname))
         self.registry = registry
-        self.login_registry(username, password, registry)
+        self.registry_username = username
+        if username and password and registry:
+            self.login_registry(username, password, registry)
 
     def login_registry(self, username, password, registry):
         self.logger.info('login %s@%s', username, registry)
         try:
-            return self.client.login(username, password, registry=registry)
+            resp = self.client.login(username, password, registry=registry)
         except APIError:
             self.logger.error('login failed: %s@%s', username, registry)
             raise RuntimeError('login failed')
+        self.registry_username = username
+        self.registry = registry
+        return resp
 
     def log_handler(self, content):
         self.logger.info(content)
 
     def _run_command(self, *commands):
+        print(len(commands))
         for c in commands:
             yield '$ {}'.format(c)
             if isinstance(c, str):
@@ -60,6 +67,20 @@ class Docker(object):
             parsed.scheme, netloc, parsed.path, parsed.params, parsed.query,
             parsed.fragment).geturl()
         return url, username, password
+
+    def _parse_repo(self, url):
+        match = self.re_repo.match(url)
+        if match:
+            return match.groups()[0]
+        else:
+            raise ValueError('invalid git url: {0}'.format(url))
+
+    def _parse_image_id(self, data):
+        match = self.re_image_id.match(data)
+        if match:
+            return match.groups()[0]
+        else:
+            return None
 
     def _get_repo(self, git_url, commit):
         self.logger.info('fetching %s..', git_url)
@@ -91,16 +112,12 @@ class Docker(object):
         :return: tag name of the image built
         """
         # find repo name
-        match = self.re_repo.search(url)
-        if match:
-            reponame = match.groups(0)[0]
-        else:
-            raise ValueError('invalid git url: {0}'.format(url))
+        reponame = self._parse_repo(url)
         # set auth
         url, username, password = self._set_auth(url, username, password)
 
         # repo example: tutum.co/blurrcat/daedalus:0.1
-        repo = '/'.join((self.registry, username, reponame))
+        repo = '/'.join((self.registry, self.registry_username, reponame))
         if not version:
             # 7 digits of git hash
             version = list(
@@ -115,13 +132,17 @@ class Docker(object):
                 '$ docker build -t{nocache} {image} .'.format(
                     nocache=' --no-cache' if self.nocache else '',
                     image=image))
+            last = None
             for line in self.client.build(
                     path='.', tag=image, nocache=self.nocache):
                 data = json.loads(line.decode('utf-8'))
-                self.log_handler(data['stream'])
-            self.logger.info('build finished %s', image)
+                last = data['stream']
+                self.log_handler(last)
+            image_id = self._parse_image_id(last)
+            self.logger.info('build finished %s(image id %s)', image, image_id)
 
-            self.logger.info('pushing image %s ...', image)
+            self.logger.info(
+                'pushing image %s(image id %s) ...', image, image_id)
             self.log_handler('$ docker push {}'.format(image))
             status = None
             for line in self.client.push(image, stream=True):
@@ -129,5 +150,5 @@ class Docker(object):
                 if status != data['status']:
                     status = data['status']
                     self.log_handler(status)
-            self.logger.info('pushed image %s', image)
-        return image
+            self.logger.info('pushed image %s@(image id %s)', image, image_id)
+        return image, image_id

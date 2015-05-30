@@ -21,4 +21,4 @@ def build_from_git(
         assert_hostname=get_config('DOCKER_ASSERT_HOSTNAME'),
         log_handler=partial(redis_log.append, bid)
     )
-    docker.build_from_git(url, username, password, commit, version)
+    return docker.build_from_git(url, username, password, commit, version)
