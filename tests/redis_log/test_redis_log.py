@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-def test_redis_log(redis_log):
+def test_log(redis_log):
     jid = 1
     redis_log.touch(jid)
     msgs = [str(i) for i in range(3)]

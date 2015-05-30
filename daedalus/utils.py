@@ -33,38 +33,12 @@ class TempDirectory(object):
             os.chdir(self.old_cwd)
 
 
-def config_from_env(prefix, show=False):
-    result = {}
-    offset = len(prefix)
-    for k, v in os.environ.items():
-        if k.startswith(prefix):
-            k = k[offset:]
-            try:
-                v = ast.literal_eval(v)
-            except (ValueError, SyntaxError):
-                pass
-            result[k] = v
-    if show:
-        print('override from env: ')
-        for k, v in result.items():
-            print('{}={}'.format(k, v))
-    return result
-
-
-def config_from_obj(config_obj):
-    conf = {}
-    for k in dir(config_obj):
-        if k.isupper():
-            conf[k] = getattr(config_obj, k)
-    return conf
-
-
-_config = config_from_obj(config)
-# production config via env vars
-_config.update(config_from_env('DAEDALUS_'))
-
-
-def get_config(k=None, default=None):
-    if not k:
-        return _config
-    return _config.get(k, default)
+def get_config(k, default=None, prefix='DAEDALUS_'):
+    v = os.environ.get('{}{}'.format(prefix, k))
+    if v:
+        try:
+            return ast.literal_eval(v)
+        except (ValueError, SyntaxError):
+            return v
+    else:
+        return getattr(config, k, default)

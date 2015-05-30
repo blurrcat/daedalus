@@ -4,7 +4,6 @@ from docker.errors import APIError
 from mock import Mock
 import pytest
 from daedalus.worker.docker_build import Docker
-from daedalus import utils
 
 
 @pytest.fixture
@@ -88,7 +87,7 @@ def registry_config(monkeypatch):
         'DOCKER_REGISTRY_USERNAME': 'u',
         'DOCKER_REGISTRY_PASSWORD': 'p',
     }.items():
-        monkeypatch.setitem(utils._config, k, v)
+        monkeypatch.setenv('DAEDALUS_{}'.format(k), v)
 
 
 @pytest.fixture
