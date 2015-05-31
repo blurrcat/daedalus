@@ -21,6 +21,7 @@ def build_from_git(
         password=get_config('DOCKER_REGISTRY_PASSWORD'),
         nocache=get_config('DOCKER_BUILD_NOCACHE'),
         assert_hostname=get_config('DOCKER_ASSERT_HOSTNAME'),
-        log_handler=partial(redis_log.append, id)
+        log_handler=partial(redis_log.append, id),
+        api_version=get_config('DOCKER_API_VERSION'),
     )
     return docker.build_from_git(url, username, password, commit, version)
