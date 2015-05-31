@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 from flask import Flask
+from flask.ext.restful import Api
 from redis import StrictRedis
 from rq import Queue
 from rq_dashboard import RQDashboard
 from daedalus import config
 from daedalus.redis_log import RedisLog
 from daedalus.utils import config_from_env
-from daedalus.web.extensions import api
 from daedalus.web.views import build
 
 
@@ -41,6 +41,7 @@ def configure_extensions(app):
     RQDashboard(app, url_prefix='/_rq')
 
     # api endpoints
+    api = Api(prefix='/api')
     api.add_resource(build.Build, '/build/')
     api.add_resource(build.Logs, '/build/<build_id>/logs/')
     api.init_app(app)

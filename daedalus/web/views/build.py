@@ -6,15 +6,27 @@ from flask.ext.restful import Resource, reqparse, inputs
 from daedalus.worker.jobs import build_from_git
 
 
+class HttpsURL(inputs.regex):
+
+    def __init__(self):
+        super().__init__(
+            r'https://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|'
+            r'(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+
+    def __call__(self, value):
+        try:
+            return super().__call__(value)
+        except ValueError as e:
+            e.message = 'Invalid url. Only https is accepted'
+            raise
+
+
+
 class Build(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()
-        parser.add_argument(
-            'url', required=True,
-            type=inputs.regex(
-                r'https://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|'
-                r'(?:%[0-9a-fA-F][0-9a-fA-F]))+'))
+        parser.add_argument('url', required=True, type=HttpsURL())
         parser.add_argument('username')
         parser.add_argument('password')
         parser.add_argument('version')

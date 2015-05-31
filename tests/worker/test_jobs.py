@@ -9,7 +9,7 @@ def test_build(
     from daedalus.worker.jobs import build_from_git
     u, p, r = 'username', 'password', 'localhost'
     image, image_id = build_from_git(
-        bid='build-test',
+        id='build-test',
         url='https://bitbucket.com/blurrcat/daedalus.git',
         username=u, password=p, version='latest',
     )
