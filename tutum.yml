@@ -1,0 +1,35 @@
+web:
+  image: tutum.co/blurrcat/daedalus
+  links:
+    - redis
+  ports:
+    - "8000"
+  environment:
+    DAEDALUS_DEBUG: False
+    DAEDALUS_SECRET: 123456
+    DAEDALUS_REDIS_URL: "redis://redis"
+  restart: "on-failure"
+  autoredeploy: true
+  command: web
+worker:
+  image: tutum.co/blurrcat/daedalus
+  links:
+    - redis
+  environment:
+    DAEDALUS_DOCKER_API_VERSION: "1.17"
+    DAEDALUS_DOCKER_REGISTRY: tutum.co
+    DAEDALUS_DOCKER_REGISTRY_USERNAME: blurrcat
+    DAEDALUS_DOCKER_REGISTRY_PASSWORD: $TUTUM_AUTH
+    DAEDALUS_REDIS_URL: "redis://redis"
+    DOCKER_HOST: "unix://var/run/docker.sock"
+  volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock"
+  roles:
+    - global
+  autoredeploy: true
+  restart: "on-failure"
+  command: worker
+redis:
+  image: tutum/redis
+  environment:
+    REDIS_PASS: "**None**"

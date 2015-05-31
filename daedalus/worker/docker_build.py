@@ -6,23 +6,27 @@ import re
 import subprocess
 import urllib.parse as urlparse
 from docker import Client
-from docker.errors import APIError, DockerException
+from docker.errors import APIError
 from docker.utils import kwargs_from_env
 from daedalus.utils import TempDirectory
 
 
 class Docker(object):
 
-    def __init__(self, registry=None, username=None, password=None,
-                 nocache=False, assert_hostname=None, log_handler=None):
+    def __init__(
+            self, registry=None, username=None, password=None,
+            nocache=False, assert_hostname=None, log_handler=None,
+            api_version=None,
+    ):
         self.re_repo = re.compile(r'.*/(\w+).git')
         self.re_image_id = re.compile(r'Successfully built (\w+)')
         self.logger = logging.getLogger('daedalus.docker')
         self.nocache = nocache
         if log_handler:
             self.log_handler = log_handler
-        self.client = Client(**kwargs_from_env(
-            assert_hostname=assert_hostname))
+        kwargs = kwargs_from_env(assert_hostname=assert_hostname)
+        kwargs['version'] = api_version
+        self.client = Client(**kwargs)
         self.registry = registry
         self.registry_username = username
         if username and password and registry:
