@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from redis import StrictRedis
 
 
 class RedisLog(object):
 
-    def __init__(self, redis_url='redis://127.0.0.1', ttl=3600, prefix='log'):
+    def __init__(self, connection, ttl=3600, prefix='log'):
         self.ttl = ttl
         self.prefix = prefix
-        self.redis = StrictRedis.from_url(redis_url)
+        self.redis = connection
 
     def _key(self, jid):
         return '{}.{}'.format(self.prefix, jid)

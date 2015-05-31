@@ -5,8 +5,12 @@ import pytest
 
 
 @pytest.fixture
-def envvar(monkeypatch):
-    monkeypatch.setenv('DAEDALUS_TEST', 'test')
-    import daedalus.utils
-    importlib.reload(daedalus.utils)  # make sure env var are loaded
-    return 'TEST', 'test'
+def environ(monkeypatch):
+    env = (
+        ('DAEDALUS_', 'KEY1', 'value'),
+        ('DAEDALUS_', 'KEY2', 'value'),
+        ('', 'KEY3', 'value')
+    )
+    for prefix, k, v in env:
+        monkeypatch.setenv('{}{}'.format(prefix, k), v)
+    return env

@@ -33,12 +33,36 @@ class TempDirectory(object):
             os.chdir(self.old_cwd)
 
 
-def get_config(k, default=None, prefix='DAEDALUS_'):
-    v = os.environ.get('{}{}'.format(prefix, k))
+def _parse_var(v):
+    try:
+        return ast.literal_eval(v)
+    except (ValueError, SyntaxError):
+        return v
+
+
+def get_config(key, default=None, prefix='DAEDALUS_'):
+    """
+    Get configuration value of key. This tries to load the value of key from
+    environment variables; if not found then try config file
+    :param key: item to get
+    :param default: default value to return if key is not found
+    :param prefix: prefix of environment variables
+    :return:
+    """
+    v = os.environ.get('{}{}'.format(prefix, key))
     if v:
-        try:
-            return ast.literal_eval(v)
-        except (ValueError, SyntaxError):
-            return v
+        return _parse_var(v)
     else:
-        return getattr(config, k, default)
+        return getattr(config, key, default)
+
+
+def config_from_env(prefix='DAEDALUS_'):
+    """
+    Load all environment variables prefixed by `prefix`
+    """
+    l = len(prefix)
+    conf = {}
+    for k, v in os.environ.items():
+        if k.startswith(prefix):
+            conf[k[l:]] = _parse_var(v)
+    return conf

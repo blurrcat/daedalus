@@ -21,7 +21,7 @@ def mock_login(monkeypatch):
 
 @pytest.fixture
 def mock_builder():
-    return Docker('1', 'localhost')
+    return Docker('localhost')
 
 
 @pytest.fixture

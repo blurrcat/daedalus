@@ -1,6 +1,8 @@
 Flask==0.10.1
+Flask-Restful==0.3.3
 aiohttp==0.15.3
 docker-py==1.2.2
 gunicorn==19.3.0
 redis==2.10.3
 rq==0.5.2
+rq-dashboard==0.3.4
