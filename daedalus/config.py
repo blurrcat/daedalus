@@ -6,6 +6,7 @@ REDIS_URL = 'redis://127.0.0.1'
 
 # docker client
 DOCKER_ASSERT_HOSTNAME = False
+DOCKER_API_VERSION = None
 
 # docker registry
 DOCKER_REGISTRY = 'tutum.co'
