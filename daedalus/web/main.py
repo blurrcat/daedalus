@@ -3,6 +3,7 @@
 from flask import Flask
 from redis import StrictRedis
 from rq import Queue
+from rq_dashboard import RQDashboard
 from daedalus import config
 from daedalus.redis_log import RedisLog
 from daedalus.utils import config_from_env
@@ -17,17 +18,28 @@ def configure_app(app):
 
 def configure_extensions(app):
     redis = StrictRedis.from_url(app.config['REDIS_URL'])
+    # redis log
     redis_log = RedisLog(
         connection=redis,
         ttl=app.config['REDIS_LOG_TTL'],
         prefix=app.config['REDIS_LOG_PREFIX'],
     )
-    queue = Queue(connection=redis)
     app.extensions.update({
         'redis': redis,
         'redis_log': redis_log,
-        'rq': queue,
     })
+    # rq
+    for q in app.config['QUEUES']:
+        queue = Queue(
+            name=q, default_timeout=app.config[
+                'RQ_JOB_TIMEOUT_{}'.format(q.upper())],
+            connection=redis,
+        )
+        app.extensions['rq_{}'.format(q)] = queue
+
+    # rq dashboard
+    RQDashboard(app, url_prefix='/_rq')
+
     # api endpoints
     api.add_resource(build.Build, '/build/')
     api.add_resource(build.Logs, '/build/<build_id>/logs/')

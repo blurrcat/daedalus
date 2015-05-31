@@ -24,10 +24,10 @@ class Build(Resource):
     def post(self):
         kwargs = self.parser.parse_args()
         kwargs['id'] = uuid.uuid4().hex
-        rq = current_app.extensions['rq']
+        build_queue = current_app.extensions['rq_build']
         redis_log = current_app.extensions['redis_log']
         redis_log.touch(kwargs['id'])
-        rq.enqueue(build_from_git, **kwargs)
+        build_queue.enqueue(build_from_git, **kwargs)
         return kwargs
 
 
@@ -41,9 +41,12 @@ class Logs(Resource):
     def get(self, build_id):
         kwargs = self.parser.parse_args()
         redis_log = current_app.extensions['redis_log']
+        since = kwargs['since']
+        logs = redis_log.tail(build_id, since)
         return {
             'id': build_id,
-            'since': kwargs['since'],
-            'log': redis_log.tail(build_id, kwargs['since'])
+            'since': since,
+            'next': since + len(logs),
+            'logs': logs,
         }
 

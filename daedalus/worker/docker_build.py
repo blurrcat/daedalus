@@ -6,7 +6,7 @@ import re
 import subprocess
 import urllib.parse as urlparse
 from docker import Client
-from docker.errors import APIError
+from docker.errors import APIError, DockerException
 from docker.utils import kwargs_from_env
 from daedalus.utils import TempDirectory
 
@@ -43,7 +43,6 @@ class Docker(object):
         self.logger.info(content)
 
     def _run_command(self, *commands):
-        print(len(commands))
         for c in commands:
             yield '$ {}'.format(c)
             if isinstance(c, str):
@@ -121,7 +120,7 @@ class Docker(object):
                 self._run_command('git rev-parse HEAD'))[1][:7]
         image = '{}:{}'.format(repo, version)
 
-        with TempDirectory(image):
+        with TempDirectory(image.replace('/', '_')):
             self._get_repo(url, commit)
             self.logger.info('building image %s...', image)
 
@@ -130,22 +129,30 @@ class Docker(object):
                     nocache=' --no-cache' if self.nocache else '',
                     image=image))
             last = None
-            for line in self.client.build(
-                    path='.', tag=image, nocache=self.nocache):
-                data = json.loads(line.decode('utf-8'))
-                last = data['stream']
-                self.log_handler(last)
-            image_id = self._parse_image_id(last)
+            try:
+                for line in self.client.build(
+                        path='.', tag=image, nocache=self.nocache):
+                    data = json.loads(line.decode('utf-8'))
+                    last = data['stream']
+                    self.log_handler(last)
+                image_id = self._parse_image_id(last)
+            except Exception as e:
+                self.log_handler(e)
+                raise
             self.logger.info('build finished %s(image id %s)', image, image_id)
 
             self.logger.info(
                 'pushing image %s(image id %s) ...', image, image_id)
             self.log_handler('$ docker push {}'.format(image))
             status = None
-            for line in self.client.push(image, stream=True):
-                data = json.loads(line.decode('utf-8'))
-                if status != data['status']:
-                    status = data['status']
-                    self.log_handler(status)
+            try:
+                for line in self.client.push(image, stream=True):
+                    data = json.loads(line.decode('utf-8'))
+                    if status != data['status']:
+                        status = data['status']
+                        self.log_handler(status)
+            except Exception as e:
+                self.log_handler(e)
+                raise
             self.logger.info('pushed image %s@(image id %s)', image, image_id)
         return image, image_id
