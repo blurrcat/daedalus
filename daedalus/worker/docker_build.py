@@ -13,11 +13,8 @@ from daedalus.utils import TempDirectory
 
 class Docker(object):
 
-    def __init__(self, bid, registry=None, username=None, password=None,
+    def __init__(self, registry=None, username=None, password=None,
                  nocache=False, assert_hostname=None, log_handler=None):
-        """
-        :param str bid: an unique identifier of the build
-        """
         self.re_repo = re.compile(r'.*/(\w+).git')
         self.re_image_id = re.compile(r'Successfully built (\w+)')
         self.logger = logging.getLogger('daedalus.docker')
