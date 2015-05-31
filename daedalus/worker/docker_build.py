@@ -118,14 +118,14 @@ class Docker(object):
 
         # repo example: tutum.co/blurrcat/daedalus:0.1
         repo = '/'.join((self.registry, self.registry_username, reponame))
-        if not version:
-            # 7 digits of git hash
-            version = list(
-                self._run_command('git rev-parse HEAD'))[1][:7]
-        image = '{}:{}'.format(repo, version)
 
-        with TempDirectory(image.replace('/', '_')):
+        with TempDirectory(repo.replace('/', '_')):
             self._get_repo(url, commit)
+            if not version:
+                # 7 digits of git hash
+                version = list(
+                    self._run_command('git rev-parse HEAD'))[1][:7]
+            image = '{}:{}'.format(repo, version)
             self.logger.info('building image %s...', image)
 
             self.log_handler(
