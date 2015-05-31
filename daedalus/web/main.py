@@ -3,11 +3,13 @@
 from flask import Flask
 from redis import StrictRedis
 from rq import Queue
-from daedalus.utils import get_config
+from daedalus import config
+from daedalus.utils import config_from_env
 
 
 def configure_app(app):
-    app.config = get_config()
+    app.config.from_object(config)
+    app.config.update(config_from_env())
 
 
 def configure_extensions(app):
