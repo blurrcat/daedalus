@@ -16,3 +16,4 @@ DOCKER_BUILD_NOCACHE = False
 
 # redis log
 REDIS_LOG_TTL = 3600
+REDIS_LOG_PREFIX = 'log'

@@ -4,7 +4,10 @@ from flask import Flask
 from redis import StrictRedis
 from rq import Queue
 from daedalus import config
+from daedalus.redis_log import RedisLog
 from daedalus.utils import config_from_env
+from daedalus.web.extensions import api
+from daedalus.web.views import build
 
 
 def configure_app(app):
@@ -14,9 +17,21 @@ def configure_app(app):
 
 def configure_extensions(app):
     redis = StrictRedis.from_url(app.config['REDIS_URL'])
-    app.extensions['redis'] = redis
+    redis_log = RedisLog(
+        connection=redis,
+        ttl=app.config['REDIS_LOG_TTL'],
+        prefix=app.config['REDIS_LOG_PREFIX'],
+    )
     queue = Queue(connection=redis)
-    app.extensions['queue'] = queue
+    app.extensions.update({
+        'redis': redis,
+        'redis_log': redis_log,
+        'rq': queue,
+    })
+    # api endpoints
+    api.add_resource(build.Build, '/build/')
+    api.add_resource(build.Logs, '/build/<build_id>/logs/')
+    api.init_app(app)
 
 
 def configure_views(app):

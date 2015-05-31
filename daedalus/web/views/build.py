@@ -31,7 +31,7 @@ class Build(Resource):
         return kwargs
 
 
-class Log(Resource):
+class Logs(Resource):
 
     def __init__(self):
         parser = reqparse.RequestParser()
