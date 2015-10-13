@@ -1,3 +1,6 @@
+.. image:: https://badge.waffle.io/blurrcat/daedalus.png?label=ready&title=Ready 
+ :target: https://waffle.io/blurrcat/daedalus
+ :alt: 'Stories in Ready'
 Daedalus
 ========
 
