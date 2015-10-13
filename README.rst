@@ -5,3 +5,5 @@ Daedalus
     :target: https://travis-ci.org/blurrcat/daedalus
 
 Build docker images from git and push to a registry
+
+Adding waffle.io integration
